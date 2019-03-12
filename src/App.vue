@@ -35,10 +35,14 @@
         <button id="give-up" @click="giveUp">GIVE UP</button>
       </div>
     </section>
-    <section class="row log">
+    <section class="row log" v-if="logs.length > 0">
       <div class="small-12 columns">
         <ul>
-          <li></li>
+          <li
+            v-for="(log, index) in logs"
+            :key="index"
+            :class="{'player-turn': log.isPlayer, 'monster-turn': !log.isPlayer}"
+          >{{log.text}}</li>
         </ul>
       </div>
     </section>
@@ -52,7 +56,8 @@ export default {
     return {
       playerHealth: 100,
       monsterHealth: 100,
-      gameIsRunning: false
+      gameIsRunning: false,
+      logs: []
     };
   },
   methods: {
@@ -60,16 +65,27 @@ export default {
       this.playerHealth = 100;
       this.monsterHealth = 100;
       this.gameIsRunning = true;
+      this.logs = [];
     },
     calcRandom: function(min, max) {
       return Math.max(Math.floor(Math.random() * max) + 1, min);
     },
     playerAttack: function(min, max) {
-      this.monsterHealth -= this.calcRandom(min, max);
+      let damage = this.calcRandom(min, max);
+      this.monsterHealth -= damage;
+      this.logs.unshift({
+        isPlayer: true,
+        text: `Player did ${damage} damage`
+      });
       this.checkMonster();
     },
     monsterAttack: function() {
-      this.playerHealth -= this.calcRandom(5, 12);
+      let damage = this.calcRandom(5, 12);
+      this.playerHealth -= damage;
+      this.logs.unshift({
+        isPlayer: false,
+        text: `Monster did ${damage} damage`
+      });
       this.checkPlayer();
     },
     checkMonster: function() {
@@ -99,10 +115,12 @@ export default {
       this.monsterAttack();
     },
     heal: function() {
-      this.playerHealth += this.calcRandom(10, 20);
-      if (this.playerHealth > 100) {
+      if (this.playerHealth < 90) {
+        this.playerHealth += 10;
+      } else {
         this.playerHealth = 100;
       }
+      this.logs.unshift({ isPlayer: true, text: "Player Healed" });
       this.monsterAttack();
     },
     giveUp: function() {
